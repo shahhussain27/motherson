@@ -293,11 +293,12 @@ export default function UserManagement() {
                   required
                 />
               </div>
-              <div>
+              <div hidden={editingUser}>
                 <Label>Password</Label>
                 <Input
                   type="password"
                   value={formData.password}
+                  
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }

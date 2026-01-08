@@ -1,3 +1,5 @@
+"use client";
+
 import { NavigationBar } from "@/components/dashboard/NavigationBar";
 import MarqueeText from "react-marquee-text";
 import React from "react";

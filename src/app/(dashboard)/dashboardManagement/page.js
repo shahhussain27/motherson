@@ -30,6 +30,7 @@ const TAB_CONFIG = {
   manpower: {
     label: "Manpower Requirement",
     apiEndpoint: "/api/attendance/manpower-requirement",
+    hideUnit: false,
     // Table Headers
     columns: [
       { key: "total_operators_required", label: "Total Ops" },
@@ -82,6 +83,7 @@ const TAB_CONFIG = {
   stations: {
     label: "Stations Requirement",
     apiEndpoint: "/api/attendance/stations-requirement",
+    hideUnit: false,
     columns: [
       { key: "total_stations_required", label: "Total Stations" },
       {
@@ -108,6 +110,7 @@ const TAB_CONFIG = {
   ctq: {
     label: "CTQ Manpower",
     apiEndpoint: "/api/attendance/ctq-manpower-requirement",
+    hideUnit: false,
     columns: [
       { key: "total_ctq_operators_required", label: "CTQ Ops" },
       { key: "buffer_ctq_required", label: "CTQ Buffer", isHighlight: true },
@@ -129,12 +132,6 @@ const TAB_CONFIG = {
         type: "number",
         width: "full",
       },
-      // {
-      //   name: "l1_required",
-      //   label: "L1 Required",
-      //   type: "number",
-      //   width: "half",
-      // },
       {
         name: "l2_required",
         label: "L2 Required",
@@ -155,6 +152,20 @@ const TAB_CONFIG = {
       },
     ],
   },
+  training: {
+    label: "Training Plan",
+    apiEndpoint: "/api/attendance/training",
+    hideUnit: true,
+    columns: [{ key: "total_training_plan", label: "Total Training Plan" }],
+    formFields: [
+      {
+        name: "total_training_plan",
+        label: "Total Training Plan",
+        type: "number",
+        width: "full",
+      },
+    ],
+  },
 };
 
 // ==========================================
@@ -165,13 +176,14 @@ const App = () => {
   const [activeTab, setActiveTab] = useState("manpower");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // <--- State for Add Modal
 
   // State: Data
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // State: Editing
-  const [editItem, setEditItem] = useState(null); // Stores the full object being edited
+  const [editItem, setEditItem] = useState(null);
 
   // State: Upload
   const [uploadFile, setUploadFile] = useState(null);
@@ -190,11 +202,23 @@ const App = () => {
       const result = await res.json();
 
       // Standardize date for frontend
-      const formatted = result.map((item) => ({
-        ...item,
-        formattedDate: new Date(item.period_end).toLocaleDateString(),
-        rawDate: item.period_end, // Keep raw for form binding if needed
-      }));
+      const formatted = result.map((item) => {
+        const dateValue = item.plan_date || item.period_end;
+        
+        // Create a Date object
+        const dateObj = new Date(dateValue);
+
+        const displayDate = activeTab === "training"
+          ? dateObj.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+          : dateObj.toLocaleDateString(); 
+
+        return {
+          ...item,
+          formattedDate: displayDate, 
+          rawDate: dateValue, 
+        };
+      });
+
       setData(formatted);
     } catch (error) {
       console.error(error);
@@ -203,9 +227,9 @@ const App = () => {
     }
   };
 
-  // Re-fetch when tab changes
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // --- 2. Delete Handler ---
@@ -227,7 +251,7 @@ const App = () => {
 
   // --- 3. Edit Handler ---
   const openEditModal = (item) => {
-    setEditItem(item); // Load item into state
+    setEditItem(item);
     setIsEditModalOpen(true);
   };
 
@@ -236,8 +260,6 @@ const App = () => {
     try {
       const formData = new FormData(e.target);
       const payload = Object.fromEntries(formData.entries());
-
-      // Ensure ID is included
       payload.id = editItem.id;
 
       const res = await fetch(currentConfig.apiEndpoint, {
@@ -248,7 +270,6 @@ const App = () => {
 
       if (!res.ok) throw new Error("Update failed");
 
-      // Optimistic Update or Refresh
       fetchData();
       setIsEditModalOpen(false);
       setEditItem(null);
@@ -258,7 +279,40 @@ const App = () => {
     }
   };
 
-  // --- 4. Upload Handler ---
+  // --- 4. Add Training Plan Handler ---
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData(e.target);
+      const monthYear = formData.get("month_year"); // YYYY-MM
+      const totalPlan = formData.get("total_training_plan");
+
+      // Construct payload (assuming backend accepts YYYY-MM-DD)
+      // Setting date to the 1st of the selected month
+      const payload = {
+        period_end: `${monthYear}-01`,
+        total_training_plan: Number(totalPlan),
+        unit: "Hours", // Default unit if backend requires it, or omit if optional
+      };
+
+      const res = await fetch(currentConfig.apiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Creation failed");
+
+      fetchData();
+      setIsAddModalOpen(false);
+      alert("Added Successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Error adding record");
+    }
+  };
+
+  // --- 5. Upload Handler ---
   const handleUpload = async () => {
     if (!uploadFile) return;
     setIsUploading(true);
@@ -276,7 +330,7 @@ const App = () => {
       if (!res.ok) throw new Error(json.error);
 
       setUploadMsg({ type: "success", text: "Upload successful!" });
-      fetchData(); // Refresh current tab data
+      fetchData();
       setTimeout(() => setIsUploadModalOpen(false), 1500);
     } catch (error) {
       setUploadMsg({ type: "error", text: error.message });
@@ -330,12 +384,24 @@ const App = () => {
               <h2 className="text-lg font-semibold">
                 {currentConfig.label} Log
               </h2>
-              <Button variant="outline" size="sm" onClick={fetchData}>
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-                />{" "}
-                Refresh
-              </Button>
+              <div className="flex gap-2">
+                {/* 2. ADD BUTTON - Only shows for Training Tab */}
+                {activeTab === "training" && (
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => setIsAddModalOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add Plan
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={fetchData}>
+                  <RefreshCw
+                    className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                  />{" "}
+                  Refresh
+                </Button>
+              </div>
             </div>
 
             <Card className="border-slate-200 shadow-sm overflow-hidden">
@@ -344,7 +410,10 @@ const App = () => {
                   <thead className="text-slate-500 bg-slate-50 border-b border-slate-200">
                     <tr>
                       <th className="h-12 px-4 font-medium">Date</th>
-                      <th className="h-12 px-4 font-medium">Unit</th>
+                      {/* 3. CONDITIONAL RENDER FOR UNIT HEADER */}
+                      {!currentConfig.hideUnit && (
+                        <th className="h-12 px-4 font-medium">Unit</th>
+                      )}
                       {/* Dynamic Headers */}
                       {currentConfig.columns.map((col) => (
                         <th key={col.key} className="h-12 px-4 font-medium">
@@ -375,7 +444,10 @@ const App = () => {
                           <td className="p-4 font-medium">
                             {row.formattedDate}
                           </td>
-                          <td className="p-4 text-slate-600">{row.unit}</td>
+                          {/* 4. CONDITIONAL RENDER FOR UNIT CELL */}
+                          {!currentConfig.hideUnit && (
+                            <td className="p-4 text-slate-600">{row.unit}</td>
+                          )}
 
                           {/* Dynamic Cells */}
                           {currentConfig.columns.map((col) => (
@@ -387,7 +459,6 @@ const App = () => {
                                   : ""
                               }`}
                             >
-                              {/* Add '+' sign if it's a buffer and value > 0 */}
                               {col.isHighlight && row[col.key] > 0 ? "+" : ""}
                               {row[col.key]}
                             </td>
@@ -450,9 +521,12 @@ const App = () => {
             <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
               {/* Read-only Context Info */}
               <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50 rounded-md mb-4 text-sm text-slate-600 border border-slate-100">
-                <div>
-                  <span className="font-semibold">Unit:</span> {editItem.unit}
-                </div>
+                {/* Only show Unit if not hidden */}
+                {!currentConfig.hideUnit && (
+                  <div>
+                    <span className="font-semibold">Unit:</span> {editItem.unit}
+                  </div>
+                )}
                 <div>
                   <span className="font-semibold">Date:</span>{" "}
                   {editItem.formattedDate}
@@ -501,6 +575,50 @@ const App = () => {
           </div>
         </div>
       )}
+
+      {/* 5. ADD TRAINING PLAN MODAL */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Training Plan</DialogTitle>
+            <DialogDescription>
+              Insert a new training plan record for a specific month.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="month_year">Select Month</Label>
+              <Input
+                type="month"
+                id="month_year"
+                name="month_year"
+                required
+                defaultValue={new Date().toISOString().slice(0, 7)} // Default to current YYYY-MM
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="total_training_plan">Total Training Plan</Label>
+              <Input
+                type="number"
+                id="total_training_plan"
+                name="total_training_plan"
+                placeholder="Enter value"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Save Record</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* UPLOAD MODAL */}
       <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>

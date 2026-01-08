@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,24 @@ import Image from "next/image";
 import { navLinks } from "@/lib/navLinks";
 
 export function NavigationBar() {
-  const username = "Admin"; // TODO: Replace with real auth data
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const userData = await res.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -55,12 +72,12 @@ export function NavigationBar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              <span className="hidden md:block">{username}</span>
+              <span className="hidden md:block">{user?.user?.username}</span>
             </Button>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Logged in as {username}</DropdownMenuLabel>
+            <DropdownMenuLabel>Logged in as {user.user?.role}</DropdownMenuLabel>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" /> Logout
             </DropdownMenuItem>

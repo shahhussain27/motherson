@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { format } from "date-fns"; 
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -35,6 +35,8 @@ import {
   XAxis,
   LabelList,
   Label,
+  Line,
+  LineChart,
 } from "recharts";
 import {
   ChartContainer,
@@ -57,11 +59,11 @@ import { cn } from "@/lib/utils";
 
 export default function Page() {
   const [open, setOpen] = useState(false);
-  
+
   // 1. Define Filter States
   const [date, setDate] = useState({
-    from: new Date(2025, 8, 26), // Default Start
-    to: new Date(2025, 10, 25),  // Default End
+    from: new Date(2025, 1, 26), // Default Start
+    to: new Date(2025, 12, 25), // Default End
   });
   const [unit, setUnit] = useState("ALL");
   const [skill, setSkill] = useState("ALL");
@@ -85,8 +87,8 @@ export default function Page() {
       endDate: endStr,
       unit: unit,
       skill: skill,
-      type: empType, 
-      periodicity: "month", 
+      type: empType,
+      periodicity: "month",
     }).toString();
 
     try {
@@ -101,6 +103,7 @@ export default function Page() {
   // 4. Trigger fetch when any filter changes
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, unit, skill, empType]);
 
   return (
@@ -108,7 +111,7 @@ export default function Page() {
       {/* Filters-column layout */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <h2 className="font-semibold">Filters</h2>
-        
+
         {/* DATE RANGE PICKER */}
         <div className="flex flex-col gap-3">
           <Popover open={open} onOpenChange={setOpen}>
@@ -237,7 +240,10 @@ export default function Page() {
                 config={MANPOWER_TREND_Config}
                 className="min-h-[200px] w-full"
               >
-                <BarChart accessibilityLayer data={analyticsData?.manpowerTrend}>
+                <BarChart
+                  accessibilityLayer
+                  data={analyticsData?.manpowerTrend}
+                >
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="month"
@@ -284,7 +290,7 @@ export default function Page() {
                 </CardTitle>
               </CardHeader>
               <ChartContainer config={ATTRITION_RATE_TREND_CONFIG}>
-                <AreaChart
+                <LineChart
                   accessibilityLayer
                   data={analyticsData?.attritionTrend}
                   margin={{
@@ -304,14 +310,28 @@ export default function Page() {
                     cursor={false}
                     content={<ChartTooltipContent indicator="line" />}
                   />
-                  <Area
+                  <Line
                     dataKey="rate"
                     type="natural"
                     fill="var(--color-rate)"
                     fillOpacity={0.4}
                     stroke="var(--color-rate)"
-                  />
-                </AreaChart>
+                    dot={{
+                      fill: "var(--color-rate)",
+                    }}
+                    activeDot={{
+                      r: 6,
+                    }}
+                  >
+                    {" "}
+                    <LabelList
+                      position="top"
+                      offset={12}
+                      className="fill-foreground"
+                      fontSize={12}
+                    />
+                  </Line>
+                </LineChart>
               </ChartContainer>
             </Card>
           </div>
@@ -430,8 +450,8 @@ export default function Page() {
             <CardHeader className="items-center pb-0">
               <CardTitle>Permanent vs Temporary</CardTitle>
               <CardDescription>
-                 {/* Dynamic Date Label */}
-                 {/* {date?.from ? format(date.from, "MMM yyyy") : ""} */}
+                {/* Dynamic Date Label */}
+                {/* {date?.from ? format(date.from, "MMM yyyy") : ""} */}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
@@ -439,7 +459,7 @@ export default function Page() {
                 config={EMPLOYEEMENT_TYPES_Config}
                 className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[250px] pb-0"
               >
-              {/* {analyticsData?.pieData && ( */}
+                {/* {analyticsData?.pieData && ( */}
                 <PieChart>
                   <ChartTooltip content={<ChartTooltipContent hideLabel />} />
 

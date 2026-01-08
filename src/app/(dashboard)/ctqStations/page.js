@@ -60,8 +60,8 @@ export default function Page() {
   
   // 1. Define Filter States
   const [date, setDate] = useState({
-    from: new Date(2025, 8, 26), // Default Start
-    to: new Date(2025, 10, 25),  // Default End
+    from: new Date(2025, 1, 26), // Default Start
+    to: new Date(2025, 12, 25),  // Default End
   });
   const [unit, setUnit] = useState("ALL");
   const [skill, setSkill] = useState("ALL");

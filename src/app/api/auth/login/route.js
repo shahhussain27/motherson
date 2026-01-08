@@ -13,7 +13,7 @@ export async function POST(req) {
     const db = await createConnection();
 
     // 1. Check User
-    const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [
+    const [rows] = await db.query("SELECT * FROM dashboard_users WHERE username = ?", [
       username,
     ]);
     if (rows.length === 0) {
@@ -60,6 +60,7 @@ export async function POST(req) {
 
     return response;
   } catch (error) {
+    console.error("Login error:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

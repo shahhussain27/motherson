@@ -1,4 +1,5 @@
 import { createConnection } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export const ensureTables = async () => {
   const conn = await createConnection();
@@ -86,9 +87,9 @@ export const ensureTables = async () => {
     );
   `);
 
-  // 5) Users Table
+  // 5) Dashboard Users Table
   await conn.query(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS dashboard_users (
       id INT AUTO_INCREMENT PRIMARY KEY,
       username VARCHAR(255) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
@@ -112,4 +113,46 @@ export const ensureTables = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // 7) Training Plan Table
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS training_plan (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      plan_date DATE NOT NULL,
+      total_training_plan INT DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uniq_plan_date (plan_date)
+    );
+  `);
+
+  try {
+    // Check if admin already exists
+    const [existingUsers] = await conn.query(
+      "SELECT id FROM dashboard_users WHERE username = ?",
+      ["admin"]
+    );
+
+    if (existingUsers.length === 0) {
+      console.log("Admin user not found. Creating default admin...");
+
+      // Hash the password "admin@123"
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash("admin@123", salt);
+
+      // Insert the new admin user
+      await conn.query(
+        `INSERT INTO dashboard_users (username, password, role, permissions) VALUES (?, ?, ?, ?)`,
+        [
+          "admin",
+          hashedPassword,
+          "Admin",
+          '["/allStations","/ctqStations","/effectiveManagement","/dashboardManagement","/dailyDefects","/userManagement"]',
+        ]
+      );
+
+      console.log("Default admin user created successfully.");
+    }
+  } catch (error) {
+    console.error("Error seeding admin user:", error);
+  }
 };

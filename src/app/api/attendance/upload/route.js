@@ -21,7 +21,8 @@ export async function POST(req) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Parse excel
-    const { period_start, period_end, unitFromHeader, records } = parseAttendanceExcel(buffer);
+    const { period_start, period_end, unitFromHeader, records } =
+      parseAttendanceExcel(buffer);
     let unit = unitFromHeader;
 
     conn = await createConnection();
@@ -31,9 +32,9 @@ export async function POST(req) {
       `
       SELECT COUNT(*) AS count
       FROM attendance_data
-      WHERE period_start = ? AND period_end = ?
+      WHERE period_start = ? AND period_end = ? AND unit = ?
     `,
-      [period_start, period_end]
+      [period_start, period_end, unitFromHeader]
     );
 
     if (existing[0].count > 0) {

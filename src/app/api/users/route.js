@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const db = await createConnection();
     const [rows] = await db.query(
-      "SELECT id, username, role, permissions FROM users"
+      "SELECT id, username, role, permissions FROM dashboard_users"
     );
     // Parse permissions JSON string back to array
     const users = rows.map((u) => ({
@@ -34,7 +34,7 @@ export async function POST(req) {
     const permString = JSON.stringify(permissions);
 
     await db.query(
-      "INSERT INTO users (username, password, role, permissions) VALUES (?, ?, ?, ?)",
+      "INSERT INTO dashboard_users (username, password, role, permissions) VALUES (?, ?, ?, ?)",
       [username, hashedPassword, role, permString]
     );
 
@@ -53,12 +53,12 @@ export async function PUT(req) {
     if (password && password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(password, 10);
       await db.query(
-        "UPDATE users SET username=?, password=?, role=?, permissions=? WHERE id=?",
+        "UPDATE dashboard_users SET username=?, password=?, role=?, permissions=? WHERE id=?",
         [username, hashedPassword, role, permString, id]
       );
     } else {
       await db.query(
-        "UPDATE users SET username=?, role=?, permissions=? WHERE id=?",
+        "UPDATE dashboard_users SET username=?, role=?, permissions=? WHERE id=?",
         [username, role, permString, id]
       );
     }

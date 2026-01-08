@@ -8,11 +8,11 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const unit = searchParams.get("unit");
     
-    let query = "SELECT * FROM ctq_manpower_requirement ORDER BY created_at DESC";
+    let query = "SELECT * FROM ctq_manpower_requirement ORDER BY period_end DESC";
     let params = [];
 
     if (unit) {
-      query = "SELECT * FROM ctq_manpower_requirement WHERE unit = ? ORDER BY created_at DESC";
+      query = "SELECT * FROM ctq_manpower_requirement WHERE unit = ? ORDER BY period_end DESC";
       params = [unit];
     }
 

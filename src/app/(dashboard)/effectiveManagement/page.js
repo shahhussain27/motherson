@@ -26,25 +26,51 @@ import {
 } from "@/lib/graphConfig";
 
 const DashboardPage = () => {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const trainingData = [
-    { month: "Jan", joined: 186, trained: 80, plan: 200, actual: 186 },
-    { month: "Feb", joined: 305, trained: 200, plan: 310, actual: 305 },
-    { month: "Mar", joined: 237, trained: 120, plan: 250, actual: 237 },
-    { month: "Apr", joined: 73, trained: 190, plan: 100, actual: 73 },
-    { month: "May", joined: 209, trained: 130, plan: 210, actual: 209 },
-    { month: "Jun", joined: 214, trained: 140, plan: 220, actual: 214 },
-  ];
+  const [trainingData, setTrainingData] = useState([]);
+  const [defectsData, setDefectsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const defectsData = [
-    { month: "Jan", totalDefects: 186, ctqRejection: 45 },
-    { month: "Feb", totalDefects: 305, ctqRejection: 82 },
-    { month: "Mar", totalDefects: 237, ctqRejection: 60 },
-    { month: "Apr", totalDefects: 73, ctqRejection: 20 },
-    { month: "May", totalDefects: 209, ctqRejection: 55 },
-    { month: "Jun", totalDefects: 214, ctqRejection: 65 },
-  ];
+  useEffect(() => {
+    const fetchTrainingData = async () => {
+      try {
+        const response = await fetch(
+          "/api/effective-management-analytics/training-summary"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch training data");
+        }
+        const result = await response.json();
+        setTrainingData(result.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchDefectsData = async () => {
+      try {
+        const response = await fetch(
+          "/api/effective-management-analytics/man-related-defects"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch defects data");
+        }
+        const result = await response.json();
+        setDefectsData(result.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDefectsData();
+
+    fetchTrainingData();
+  }, []);
+
 
   const summary = useMemo(() => {
     return {
@@ -56,6 +82,13 @@ const DashboardPage = () => {
       ctq: defectsData.reduce((acc, curr) => acc + curr.ctqRejection, 0),
     };
   }, [trainingData, defectsData]);
+
+  if (loading) {
+    return <div className="p-4">Loading...</div>;
+  }
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
 
   return (
     <div className="w-full min-h-screen p-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
