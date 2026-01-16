@@ -44,3 +44,5 @@ export async function createConnection() {
 
   return pool;
 }
+
+export { sql };
