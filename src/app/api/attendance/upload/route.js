@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createConnection } from "@/lib/db";
-import { ensureTables } from "@/lib/initDb";
 import { parseAttendanceExcel } from "@/lib/attendanceParser";
 
 export const runtime = "nodejs";
@@ -8,7 +7,6 @@ export const runtime = "nodejs";
 export async function POST(req) {
   let conn;
   try {
-    await ensureTables();
 
     const formData = await req.formData();
     const file = formData.get("file");

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createConnection } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { ensureTables } from "@/lib/initDb";
 
 // TODO: Ensure request is from Admin
 
@@ -24,7 +23,6 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    await ensureTables();
 
     const { username, password, role, permissions } = await req.json();
     const db = await createConnection();

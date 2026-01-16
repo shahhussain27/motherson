@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { createConnection } from "@/lib/db";
-import { ensureTables } from "@/lib/initDb";
 
 // GET: Fetch Defects (with filters & pagination)
 export async function GET(request) {
-  await ensureTables();
 
   const { searchParams } = new URL(request.url);
   const gp_no = searchParams.get("gp_no");
