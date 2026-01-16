@@ -9,38 +9,41 @@
 //       SELECT 
 //         DATE_FORMAT(combined.dt, '%b %Y') as month_display,
 //         SUM(combined.plan_val) as total_plan,
-//         SUM(combined.actual_val) as total_actual
+//         SUM(combined.actual_val) as total_actual,
+//         SUM(combined.trained_val) as total_trained
 //       FROM (
 //         -- Part 1: Get Training Plans
 //         SELECT 
 //             plan_date as dt, 
 //             total_training_plan as plan_val, 
-//             0 as actual_val 
+//             0 as actual_val,
+//             0 as trained_val
 //         FROM training_plan
 //         WHERE plan_date IS NOT NULL
 
 //         UNION ALL
 
-//         -- Part 2: Get Actual Students Created
+//         -- Part 2: Get Actual Students Created & Trained Status
 //         SELECT 
 //             createdAt as dt, 
 //             0 as plan_val, 
-//             1 as actual_val 
+//             1 as actual_val,
+//             CASE WHEN currentLevel = 'L1' THEN 1 ELSE 0 END as trained_val
 //         FROM users 
 //         WHERE role = 'STUDENT' AND createdAt IS NOT NULL
 //       ) as combined
-//       -- Group by Year and Month to prevent Jan 2024 and Jan 2025 from merging
+//       -- Group by Year and Month
 //       GROUP BY YEAR(combined.dt), MONTH(combined.dt), DATE_FORMAT(combined.dt, '%b %Y')
-//       -- Order chronologically (Oldest to Newest)
+//       -- Order chronologically
 //       ORDER BY YEAR(combined.dt) ASC, MONTH(combined.dt) ASC;
 //     `;
 
 //     const [rows] = await conn.query(query);
 
 //     const formattedData = rows.map((row) => ({
-//       month: row.month_display, 
+//       month: row.month_display,
 //       joined: Number(row.total_actual) || 0,
-//       trained: 0,
+//       trained: Number(row.total_trained) || 0, // Now mapped from SQL result
 //       plan: Number(row.total_plan) || 0,
 //       actual: Number(row.total_actual) || 0,
 //     }));
@@ -62,12 +65,16 @@ export const GET = async (request) => {
   try {
     const conn = await createConnection();
 
+    // SQL Server Query
     const query = `
       SELECT 
-        DATE_FORMAT(combined.dt, '%b %Y') as month_display,
+        FORMAT(combined.dt, 'MMM yyyy') as month_display,
         SUM(combined.plan_val) as total_plan,
         SUM(combined.actual_val) as total_actual,
-        SUM(combined.trained_val) as total_trained
+        SUM(combined.trained_val) as total_trained,
+        -- Need these for sorting, but don't need to return them necessarily
+        YEAR(combined.dt) as sort_year,
+        MONTH(combined.dt) as sort_month
       FROM (
         -- Part 1: Get Training Plans
         SELECT 
@@ -81,6 +88,7 @@ export const GET = async (request) => {
         UNION ALL
 
         -- Part 2: Get Actual Students Created & Trained Status
+        -- Assuming 'users' table exists and has createdAt column
         SELECT 
             createdAt as dt, 
             0 as plan_val, 
@@ -89,18 +97,21 @@ export const GET = async (request) => {
         FROM users 
         WHERE role = 'STUDENT' AND createdAt IS NOT NULL
       ) as combined
-      -- Group by Year and Month
-      GROUP BY YEAR(combined.dt), MONTH(combined.dt), DATE_FORMAT(combined.dt, '%b %Y')
+      
+      -- Group by Year, Month, and the formatted string
+      GROUP BY YEAR(combined.dt), MONTH(combined.dt), FORMAT(combined.dt, 'MMM yyyy')
+      
       -- Order chronologically
-      ORDER BY YEAR(combined.dt) ASC, MONTH(combined.dt) ASC;
+      ORDER BY sort_year ASC, sort_month ASC;
     `;
 
-    const [rows] = await conn.query(query);
+    const result = await conn.request().query(query);
+    const rows = result.recordset;
 
     const formattedData = rows.map((row) => ({
       month: row.month_display,
       joined: Number(row.total_actual) || 0,
-      trained: Number(row.total_trained) || 0, // Now mapped from SQL result
+      trained: Number(row.total_trained) || 0,
       plan: Number(row.total_plan) || 0,
       actual: Number(row.total_actual) || 0,
     }));
