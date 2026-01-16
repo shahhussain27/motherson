@@ -10,37 +10,20 @@ export async function POST(req) {
   try {
     await ensureTables();
     const { username, password } = await req.json();
-    // const db = await createConnection();
-    const pool = await createConnection();
+    const db = await createConnection();
 
     // 1. Check User
-    // const [rows] = await db.query("SELECT * FROM dashboard_users WHERE username = ?", [
-    //   username,
-    // ]);
-    // if (rows.length === 0) {
-    //   return NextResponse.json(
-    //     { message: "Invalid credentials" },
-    //     { status: 401 }
-    //   );
-    // }
-
-    // const user = rows[0];
-
-    const result = await pool
-      .request()
-      .input("username", sql.VarChar, username)
-      .query(
-        "SELECT id, username, password, role, permissions FROM dashboard_users WHERE username = @username"
-      );
-
-    if (result.recordset.length === 0) {
+    const [rows] = await db.query("SELECT * FROM dashboard_users WHERE username = ?", [
+      username,
+    ]);
+    if (rows.length === 0) {
       return NextResponse.json(
         { message: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    const user = result.recordset[0];
+    const user = rows[0];
 
     // 2. Check Password
     const isValid = await bcrypt.compare(password, user.password);
