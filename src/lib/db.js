@@ -11,7 +11,6 @@ export const createConnection = async () => {
       database: process.env.DATABASE_NAME,
       waitForConnections: true,
       connectionLimit: 10,
-      family: 4
     });
   }
 
