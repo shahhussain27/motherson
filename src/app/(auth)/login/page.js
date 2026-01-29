@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
-import { ro } from "date-fns/locale/ro";
 
 const Page = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
@@ -44,6 +44,7 @@ const Page = () => {
     if (!validate()) return;
     
     setErrors({ ...errors, general: "" });
+    setIsLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -59,9 +60,11 @@ const Page = () => {
         window.location.href = "/allStations"; // Use window.location to force AuthWrapper to re-run
       } else {
         setErrors({ ...errors, general: data.message || "Login failed" });
+        setIsLoading(false);
       }
     } catch (err) {
       setErrors({ ...errors, general: "An error occurred. Please try again." });
+      setIsLoading(false);
     }
   };
 
@@ -139,7 +142,7 @@ const Page = () => {
             className="w-full text-white font-medium"
             onClick={handleLogin}
           >
-            Login
+            {isLoading ? "Logging in..." : "Login"}
           </Button>
         </CardContent>
       </Card>

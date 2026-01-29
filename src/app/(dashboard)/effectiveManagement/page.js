@@ -19,6 +19,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
+  mockTrainingData,
+  mockDefectsData,
   joinedVsTrainedConfig,
   planVsActualConfig,
   defectsConfig,
@@ -26,10 +28,12 @@ import {
 } from "@/lib/graphConfig";
 
 const DashboardPage = () => {
-  const [trainingData, setTrainingData] = useState([]);
-  const [defectsData, setDefectsData] = useState([]);
+  const [trainingData, setTrainingData] = useState(mockTrainingData);
+  const [defectsData, setDefectsData] = useState(mockDefectsData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  
 
   useEffect(() => {
     const fetchTrainingData = async () => {
@@ -47,7 +51,7 @@ const DashboardPage = () => {
       } finally {
         setLoading(false);
       }
-    };
+    };``
 
     const fetchDefectsData = async () => {
       try {
@@ -86,9 +90,9 @@ const DashboardPage = () => {
   if (loading) {
     return <div className="p-4">Loading...</div>;
   }
-  if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>;
-  }
+  // if (error) {
+  //   return <div className="p-4 text-red-500">Error: {error}</div>;
+  // }
 
   return (
     <div className="w-full min-h-screen p-4 bg-gray-50 dark:bg-slate-950 transition-colors duration-300">

@@ -63,3 +63,27 @@ export const joinedVsTrainedConfig = {
   export const ctqConfig = {
     ctqRejection: { label: "CTQ Rejection", color: "var(--chart-5)" },
   };
+
+  // -----------------------------
+  // Mock Data
+  // -----------------------------
+
+  // Data for: Joined vs Trained AND Plan vs Actual
+export const mockTrainingData = [
+  { month: "Jan", joined: 45, trained: 40, plan: 50, actual: 42 },
+  { month: "Feb", joined: 52, trained: 48, plan: 55, actual: 50 },
+  { month: "Mar", joined: 38, trained: 35, plan: 45, actual: 40 },
+  { month: "Apr", joined: 65, trained: 60, plan: 70, actual: 62 },
+  { month: "May", joined: 48, trained: 45, plan: 60, actual: 48 },
+  { month: "Jun", joined: 55, trained: 54, plan: 65, actual: 58 },
+];
+
+// Data for: Defects Trend AND CTQ Rejection
+export const mockDefectsData = [
+  { month: "Jan", totalDefects: 120, ctqRejection: 15 },
+  { month: "Feb", totalDefects: 98, ctqRejection: 12 },
+  { month: "Mar", totalDefects: 145, ctqRejection: 25 },
+  { month: "Apr", totalDefects: 85, ctqRejection: 8 },
+  { month: "May", totalDefects: 110, ctqRejection: 18 },
+  { month: "Jun", totalDefects: 75, ctqRejection: 5 },
+];
