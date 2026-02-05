@@ -48,7 +48,7 @@ export async function POST(req) {
 
     const BATCH_SIZE = 500;
     const insertQuery = `
-      INSERT INTO attendance_data (
+      INSERT IGNORE INTO attendance_data (
         period_start, period_end, attendance_date, gp_no, name, 
         father_or_husband_name, unit, skill_type, designation, contractor, 
         section, sub_section, attendance_code, pd, lv, wo, 
