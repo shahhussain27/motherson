@@ -71,7 +71,7 @@ const Page = () => {
   return (
     <div
       className="min-h-screen flex justify-end items-center px-2 lg:px-16 bg-cover bg-no-repeat"
-      style={{ backgroundImage: `url('/Images/bg.webp')` }}
+      // style={{ backgroundImage: `url('/Images/bg.webp')` }}
     >
       <Card className="w-[380px] shadow-2xl border border-gray-200 bg-white/90 backdrop-blur">
         <CardHeader className="text-center">
