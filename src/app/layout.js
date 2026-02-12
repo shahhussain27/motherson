@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Motherson Manpower Management System",
+  title: "Sarvagya Manpower Management System",
   description: "Manage and Analyze Manpower Efficiently",
 };
 

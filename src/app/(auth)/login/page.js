@@ -76,7 +76,7 @@ const Page = () => {
       <Card className="w-[380px] shadow-2xl border border-gray-200 bg-white/90 backdrop-blur">
         <CardHeader className="text-center">
           <Image
-            src="/Images/logo.png"
+            src="/Images/logo.jpeg"
             alt="Logo"
             width={80}
             height={80}

@@ -51,7 +51,7 @@ export function NavigationBar() {
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         {/* LOGO */}
         <Link href="/" className="text-xl font-bold">
-          <Image src="/Images/logo.png" alt="logo" width={80} height={80} />
+          <Image src="/Images/logo.jpeg" alt="logo" width={50} height={80} />
         </Link>
 
         {/* DESKTOP NAV */}
